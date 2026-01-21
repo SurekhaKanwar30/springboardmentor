@@ -2,93 +2,113 @@ import streamlit as st
 import pandas as pd
 import pickle
 
-# Page Config for a better browser tab title and layout
-st.set_page_config(page_title="IPL Win Predictor", layout="centered")
+# -------------------- PAGE CONFIG --------------------
+st.set_page_config(
+    page_title="IPL Win Probability Predictor",
+    page_icon="🏏",
+    layout="wide"
+)
 
-# Custom CSS to improve the look and feel
+# -------------------- CUSTOM CSS --------------------
 st.markdown("""
-    <style>
-    .main {
-        background-color: #f8f9fa;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
-    }
-    .result-card {
-        padding: 20px;
-        border-radius: 10px;
-        background-color: white;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-top: 20px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+.stApp {
+    background: linear-gradient(135deg, #0f172a, #020617);
+    color: white;
+}
 
-# Declaring the teams
-teams = ['Sunrisers Hyderabad', 'Mumbai Indians', 'Royal Challengers Bangalore', 
-         'Kolkata Knight Riders', 'Kings XI Punjab', 'Chennai Super Kings', 
-         'Rajasthan Royals', 'Delhi Capitals']
+label {
+    color: #e5e7eb !important;
+    font-weight: 600;
+}
 
-# declaring the venues
-cities = ['Hyderabad', 'Bangalore', 'Mumbai', 'Indore', 'Kolkata', 'Delhi',
-          'Chandigarh', 'Jaipur', 'Chennai', 'Cape Town', 'Port Elizabeth',
-          'Durban', 'Centurion', 'East London', 'Johannesburg', 'Kimberley',
-          'Bloemfontein', 'Ahmedabad', 'Cuttack', 'Nagpur', 'Dharamsala',
-          'Visakhapatnam', 'Pune', 'Raipur', 'Ranchi', 'Abu Dhabi',
-          'Sharjah', 'Mohali', 'Bengaluru']
+.card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
 
-# Load Model
+.stButton > button {
+    width: 100%;
+    border-radius: 12px;
+    font-weight: bold;
+    background: linear-gradient(90deg, #22c55e, #3b82f6);
+    color: white;
+    border: none;
+}
+
+footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------- HEADER --------------------
+st.markdown("""
+<div class="card">
+    <h1>🏏 IPL Win Probability Predictor</h1>
+    <p>Predict the winning chances of teams based on current match situation</p>
+</div>
+""", unsafe_allow_html=True)
+
+# -------------------- MODEL DATA --------------------
+teams = [
+    'Sunrisers Hyderabad', 'Mumbai Indians', 'Royal Challengers Bangalore',
+    'Kolkata Knight Riders', 'Kings XI Punjab', 'Chennai Super Kings',
+    'Rajasthan Royals', 'Delhi Capitals'
+]
+
+cities = [
+    'Hyderabad', 'Bangalore', 'Mumbai', 'Indore', 'Kolkata', 'Delhi',
+    'Chandigarh', 'Jaipur', 'Chennai', 'Cape Town', 'Port Elizabeth',
+    'Durban', 'Centurion', 'East London', 'Johannesburg', 'Kimberley',
+    'Bloemfontein', 'Ahmedabad', 'Cuttack', 'Nagpur', 'Dharamsala',
+    'Visakhapatnam', 'Pune', 'Raipur', 'Ranchi', 'Abu Dhabi',
+    'Sharjah', 'Mohali', 'Bengaluru'
+]
+
 pipe = pickle.load(open('pipe.pkl', 'rb'))
 
-st.title('🏏 IPL Win Predictor')
-st.markdown("---")
+# -------------------- INPUT SECTION --------------------
+st.markdown('<div class="card">', unsafe_allow_html=True)
+st.subheader("📥 Match Details")
 
-# Team Selection
 col1, col2 = st.columns(2)
 with col1:
-    battingteam = st.selectbox('Select the batting team', sorted(teams))
+    battingteam = st.selectbox("Batting Team", sorted(teams))
 with col2:
-    bowlingteam = st.selectbox('Select the bowling team', sorted(teams))
+    bowlingteam = st.selectbox("Bowling Team", sorted(teams))
 
-# City Selection
-city = st.selectbox('Select the city where the match is being played', sorted(cities))
+city = st.selectbox("Match City", sorted(cities))
+target = st.number_input("Target Score", min_value=1)
 
-# Target Input
-target = st.number_input('Target Score', min_value=0, step=1)
-
-# Match Progress Inputs
-st.markdown("### Match Progress")
 col3, col4, col5 = st.columns(3)
 with col3:
-    score = st.number_input('Current Score', min_value=0, step=1)
+    score = st.number_input("Current Score", min_value=0)
 with col4:
-    overs = st.number_input('Overs Completed', min_value=0.0, max_value=20.0, step=0.1)
+    overs = st.number_input("Overs Completed", min_value=0.0)
 with col5:
-    wickets = st.number_input('Wickets Fallen', min_value=0, max_value=10, step=1)
+    wickets = st.number_input("Wickets Fallen", min_value=0, max_value=10)
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-if st.button('Predict Probability'):
-    # Backend Logic (No names or values changed)
-    runs_left = target-score
-    balls_left = 120-(overs*6)
-    wickets = 10-wickets
-    currentrunrate = score/overs if overs > 0 else 0
-    requiredrunrate = (runs_left*6)/balls_left if balls_left > 0 else 0
+# -------------------- PREDICTION --------------------
+if st.button("Predict Win Probability"):
+
+    runs_left = target - score
+    balls_left = 120 - (overs * 6)
+    wickets_left = 10 - wickets
+    currentrunrate = score / overs if overs != 0 else 0
+    requiredrunrate = (runs_left * 6) / balls_left if balls_left != 0 else 0
 
     input_df = pd.DataFrame({
-        'batting_team': [battingteam], 
-        'bowling_team': [bowlingteam], 
-        'city': [city], 
-        'runs_left': [runs_left], 
-        'balls_left': [balls_left], 
-        'wickets': [wickets], 
-        'total_runs_x': [target], 
-        'cur_run_rate': [currentrunrate], 
+        'batting_team': [battingteam],
+        'bowling_team': [bowlingteam],
+        'city': [city],
+        'runs_left': [runs_left],
+        'balls_left': [balls_left],
+        'wickets': [wickets_left],
+        'total_runs_x': [target],
+        'cur_run_rate': [currentrunrate],
         'req_run_rate': [requiredrunrate]
     })
 
@@ -96,27 +116,25 @@ if st.button('Predict Probability'):
     lossprob = result[0][0]
     winprob = result[0][1]
 
-    # UI Improvement for Results
-    st.markdown("---")
-    st.subheader("Win Probability")
-    
-    res_col1, res_col2 = st.columns(2)
-    
-    with res_col1:
-        st.markdown(f"### {battingteam}")
-        st.title(f"{round(winprob*100)}%")
+    # -------------------- RESULT DISPLAY --------------------
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.subheader("📊 Match Prediction Result")
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Target", target)
+    m2.metric("Score", score)
+    m3.metric("Runs Left", runs_left)
+    m4.metric("Wickets Left", wickets_left)
+
+    st.subheader("🏆 Winning Probability")
+
+    left, right = st.columns(2)
+    with left:
+        st.metric(battingteam, f"{round(winprob * 100)}%")
         st.progress(winprob)
-        
-    with res_col2:
-        st.markdown(f"### {bowlingteam}")
-        st.title(f"{round(lossprob*100)}%")
+
+    with right:
+        st.metric(bowlingteam, f"{round(lossprob * 100)}%")
         st.progress(lossprob)
 
-    # Added a simple Rate Comparison Bar Chart for better UX
-    st.markdown("---")
-    st.markdown("### Rate Analysis")
-    rates = pd.DataFrame({
-        'Metric': ['Current Run Rate', 'Required Run Rate'],
-        'Value': [round(currentrunrate, 2), round(requiredrunrate, 2)]
-    })
-    st.bar_chart(rates, x='Metric', y='Value', color="#ff4b4b")
+    st.markdown('</div>', unsafe_allow_html=True)
