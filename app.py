@@ -10,7 +10,7 @@ st.set_page_config(
 )
 
 # -------------------- CUSTOM CSS (ALL IN ONE BLOCK) --------------------
-st.markdown("""
+st.markdown(
 <style>
 
 /* App background */
@@ -75,7 +75,7 @@ div[data-baseweb="select"] > div,
 footer {visibility: hidden;}
 
 </style>
-""", unsafe_allow_html=True)
+, unsafe_allow_html=True)
 
 # -------------------- HEADER / BANNER --------------------
 st.markdown("""
